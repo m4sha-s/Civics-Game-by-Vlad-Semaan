@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة الاقتصاد الذكي</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Tajawal', Arial, sans-serif; background: #FFF8E1; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 20px; }
+  .container { background: #fff; border-radius: 20px; padding: 24px 20px; max-width: 480px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.10); }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .hero { text-align: center; padding: 10px 0 20px; }
+  .hero-emoji { font-size: 64px; display: block; margin-bottom: 12px; animation: bounce 1.2s infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+  .hero h1 { font-size: 26px; font-weight: 900; color: #4E342E; margin-bottom: 8px; }
+  .hero p { font-size: 16px; color: #795548; margin-bottom: 24px; line-height: 1.8; }
+  .start-btn { background: #F9A825; color: #3E2000; border: none; border-radius: 14px; padding: 16px 0; font-size: 20px; font-weight: 900; cursor: pointer; width: 100%; font-family: inherit; }
+  .start-btn:hover { background: #F57F17; }
+
+  .progress-bar { height: 10px; background: #F5F5F5; border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #F9A825; border-radius: 10px; transition: width 0.4s; }
+  .q-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .q-num { font-size: 14px; color: #888; font-weight: 700; }
+  .score-badge { background: #E8F5E9; color: #1B5E20; border-radius: 20px; padding: 4px 14px; font-size: 14px; font-weight: 900; }
+  .topic-tag { font-size: 13px; font-weight: 700; padding: 4px 14px; border-radius: 20px; margin-bottom: 12px; display: inline-block; }
+  .tag-saving { background: #E8F5E9; color: #1B5E20; }
+  .tag-work   { background: #E3F2FD; color: #0D47A1; }
+  .tag-budget { background: #FCE4EC; color: #880E4F; }
+  .q-text { font-size: 19px; font-weight: 700; color: #222; line-height: 1.6; margin-bottom: 18px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt-btn { background: #FAFAFA; border: 2px solid #E0E0E0; border-radius: 12px; padding: 14px 16px; font-size: 16px; font-weight: 700; color: #333; cursor: pointer; text-align: right; font-family: inherit; transition: background 0.15s, border-color 0.15s; }
+  .opt-btn:hover:not(:disabled) { background: #FFF9C4; border-color: #F9A825; }
+  .opt-btn.correct { background: #E8F5E9; border-color: #4CAF50; color: #1B5E20; }
+  .opt-btn.wrong   { background: #FFEBEE; border-color: #EF5350; color: #B71C1C; }
+  .opt-btn:disabled { cursor: default; }
+  .feedback { border-radius: 12px; padding: 14px 16px; margin-top: 14px; font-size: 15px; font-weight: 700; line-height: 1.8; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct { background: #E8F5E9; color: #1B5E20; }
+  .feedback.wrong   { background: #FFEBEE; color: #B71C1C; }
+  .next-btn { background: #333; color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 900; cursor: pointer; width: 100%; margin-top: 14px; font-family: inherit; display: none; }
+  .next-btn.show { display: block; }
+  .next-btn:hover { background: #111; }
+
+  .result-screen { text-align: center; padding: 10px 0 20px; }
+  .result-emoji { font-size: 72px; display: block; margin-bottom: 12px; }
+  .result-screen h2 { font-size: 26px; font-weight: 900; color: #333; margin-bottom: 6px; }
+  .big-score { font-size: 56px; font-weight: 900; color: #F9A825; margin: 10px 0; }
+  .stars { font-size: 30px; margin-bottom: 14px; letter-spacing: 6px; }
+  .result-msg { font-size: 16px; color: #555; margin-bottom: 16px; line-height: 1.8; }
+  .topic-scores { background: #FFF8E1; border-radius: 14px; padding: 16px; margin: 14px 0; text-align: right; }
+  .topic-scores h3 { font-size: 15px; font-weight: 900; color: #555; margin-bottom: 10px; }
+  .topic-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 15px; font-weight: 700; color: #333; }
+  .topic-row:not(:last-child) { border-bottom: 1px dashed #E0E0E0; }
+  .retry-btn { background: #F9A825; color: #3E2000; border: none; border-radius: 14px; padding: 16px 0; font-size: 18px; font-weight: 900; cursor: pointer; width: 100%; font-family: inherit; margin-top: 8px; }
+  .retry-btn:hover { background: #F57F17; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div id="start-screen" class="screen active">
+    <div class="hero">
+      <span class="hero-emoji">🐷</span>
+      <h1>لعبة الاقتصاد الذكي!</h1>
+      <p>أجب على ثمانية أسئلة حول الادخار والعمل الإضافي وتنظيم ميزانية الأسرة. هل أنت مستعد؟</p>
+      <button class="start-btn" onclick="startGame()">🎮 ابدأ اللعبة!</button>
+    </div>
+  </div>
+
+  <div id="quiz-screen" class="screen">
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div class="q-meta">
+      <span class="q-num" id="q-num">سؤال ١ من ٩</span>
+      <span class="score-badge" id="score-disp">النقاط: ٠</span>
+    </div>
+    <span class="topic-tag" id="topic-tag"></span>
+    <p class="q-text" id="q-text"></p>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">السؤال التالي ←</button>
+  </div>
+
+  <div id="result-screen" class="screen">
+    <div class="result-screen">
+      <span class="result-emoji" id="result-emoji"></span>
+      <h2 id="result-title"></h2>
+      <div class="big-score" id="big-score"></div>
+      <div class="stars" id="stars"></div>
+      <p class="result-msg" id="result-msg"></p>
+      <div class="topic-scores">
+        <h3>نتيجتك في كل موضوع:</h3>
+        <div class="topic-row"><span>🐷 الادخار</span><span id="ts1"></span></div>
+        <div class="topic-row"><span>💼 العمل الإضافي</span><span id="ts2"></span></div>
+        <div class="topic-row"><span>👨‍👩‍👧 ميزانية الأسرة</span><span id="ts3"></span></div>
+      </div>
+      <button class="retry-btn" onclick="restart()">🔄 العب مرة أخرى</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    topic: 'saving', tag: '🐷 الادخار', tagClass: 'tag-saving',
+    q: 'ما معنى الادخار؟',
+    opts: ['إنفاق جميع الأموال فور الحصول عليها', 'تخصيص جزء من المال للمستقبل', 'اقتراض المال من الآخرين', 'شراء أكبر قدر ممكن من الأشياء'],
+    ans: 1,
+    exp: '✔ الادخار يعني تخصيص جزء من مالك جانباً بدلاً من إنفاق كل شيء — وهو عادة ذكية تحمي مستقبلك!'
+  },
+  {
+    topic: 'saving', tag: '🐷 الادخار', tagClass: 'tag-saving',
+    q: 'ماذا يحدث للمال عند إيداعه في البنك؟',
+    opts: ['يبقى كما هو دون تغيير', 'يختفي ولا يُعاد', 'ينمو تدريجياً بسبب الفوائد', 'ينقص مع مرور الوقت'],
+    ans: 2,
+    exp: '✔ يمنح البنك صاحب المال "فوائد"، أي مبلغاً إضافياً مقابل إيداع أمواله. فمالك ينمو حتى وأنت نائم!'
+  },
+  {
+    topic: 'saving', tag: '🐷 الادخار', tagClass: 'tag-saving',
+    q: 'لماذا يجب الإنسان أن يدّخر جزءاً من ماله؟',
+    opts: ['للتباهي أمام الآخرين', 'لأن الإنفاق خطأ في جميع الأحوال', 'لمواجهة الطوارئ والأمور غير المتوقعة', 'لا توجد أي فائدة من الادخار'],
+    ans: 2,
+    exp: '✔ تأتي الطوارئ دون سابق إنذار كالمرض أو الأعطال المفاجئة. الادخار هو الحماية التي تُعيننا في أوقات الحاجة.'
+  },
+  {
+    topic: 'work', tag: '💼 العمل الإضافي', tagClass: 'tag-work',
+    q: 'ما المقصود بالعمل الإضافي المؤقت؟',
+    opts: ['عمل دائم في شركة كبيرة', 'عمل لفترة محددة خارج أوقات الدوام الرسمي', 'أخذ إجازة طويلة من العمل', 'العمل في أيام العطل الرسمية '],
+    ans: 1,
+    exp: '✔ العمل الإضافي المؤقت هو عمل لوقت محدد بهدف زيادة الدخل، كالعمل في فصل الصيف أو في ساعات المساء.'
+  },
+  {
+    topic: 'work', tag: '💼 العمل الإضافي', tagClass: 'tag-work',
+    q: 'كيف يُسهم العمل الإضافي في دعم الأسرة؟',
+    opts: ['لا يُسهم في شيء ويُسبب التعب ', 'يزيد الدخل المالي ويساعد على تلبية احتياجات الأسرة', 'يضر بصحة الإنسان في جميع الأحوال', 'لا فائدة منه على الإطلاق'],
+    ans: 1,
+    exp: '✔ الدخل الإضافي يمنح الأسرة قدرة أكبر على تلبية احتياجاتها من كتب مدرسية وطعام وملابس.'
+  },
+  {
+    topic: 'work', tag: '💼 العمل الإضافي', tagClass: 'tag-work',
+    q: 'أيٌّ من الأمثلة التالية يُعدّ عملاً إضافياً مؤقتاً؟',
+    opts: ['النوم بعد الغداء', 'مشاهدة التلفاز', 'بيع الحلوى في المدرسة بإذن الوالدين', 'اللعب في الشارع'],
+    ans: 2,
+    exp: '✔ بيع شيء ما بجهدك الخاص يُعدّ عملاً حقيقياً! يستطيع الأطفال من خلاله تعلّم قيمة العمل والكسب المشروع.'
+  },
+  {
+    topic: 'budget', tag: '👨‍👩‍👧 ميزانية الأسرة', tagClass: 'tag-budget',
+    q: 'ما هي الميزانية الأسرية؟',
+    opts: ['قائمة بأسماء أفراد الأسرة', 'خطة منظّمة لتوزيع الدخل وضبط النفقات', 'برنامج تلفزيوني عائلي', 'نوع من أنواع الطعام'],
+    ans: 1,
+    exp: '✔ الميزانية الأسرية هي خطة واضحة تُحدد كم يدخل من مال وكم يخرج، وهي كالخريطة التي تُرشد الأسرة في إنفاقها.'
+  },
+  {
+    topic: 'budget', tag: '👨‍👩‍👧 ميزانية الأسرة', tagClass: 'tag-budget',
+    q: 'ما الفائدة من مشاركة الأطفال في وضع ميزانية الأسرة؟',
+    opts: ['لا فائدة من ذلك لأن الأطفال صغار', 'يتعلمون قيمة المال وأهمية التخطيط المالي', 'يصبحون مسؤولين عن سداد ديون الأسرة', 'يتوقفون عن اللعب نهائياً'],
+    ans: 1,
+    exp: '✔ مشاركة الأطفال تُعرّفهم بمصادر دخل الأسرة وأوجه إنفاقه، وهو درس بالغ الأهمية لحياتهم المستقبلية!'
+  }
+];
+
+const arabicNums = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+function toArabic(n) { return String(n).split('').map(d => arabicNums[+d] ?? d).join(''); }
+
+let current = 0, score = 0, answered = false;
+let topicScores = { saving: [0,0], work: [0,0], budget: [0,0] };
+
+function startGame() {
+  document.getElementById('start-screen').classList.remove('active');
+  document.getElementById('quiz-screen').classList.add('active');
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[current];
+  answered = false;
+  document.getElementById('progress').style.width = ((current / questions.length) * 100) + '%';
+  document.getElementById('q-num').textContent = 'سؤال ' + toArabic(current + 1) + ' من ' + toArabic(questions.length);
+  document.getElementById('score-disp').textContent = 'النقاط: ' + toArabic(score);
+  const tag = document.getElementById('topic-tag');
+  tag.textContent = q.tag;
+  tag.className = 'topic-tag ' + q.tagClass;
+  document.getElementById('q-text').textContent = q.q;
+  const opts = document.getElementById('options');
+  opts.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.textContent = o;
+    b.onclick = () => selectAnswer(i);
+    opts.appendChild(b);
+  });
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('next-btn').className = 'next-btn';
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach(b => b.disabled = true);
+  topicScores[q.topic][1]++;
+  const fb = document.getElementById('feedback');
+  if (idx === q.ans) {
+    btns[idx].classList.add('correct');
+    score++;
+    topicScores[q.topic][0]++;
+    fb.className = 'feedback correct show';
+    fb.textContent = q.exp;
+  } else {
+    btns[idx].classList.add('wrong');
+    btns[q.ans].classList.add('correct');
+    fb.className = 'feedback wrong show';
+    fb.textContent = '✗ الإجابة الصحيحة: ' + q.opts[q.ans] + ' — ' + q.exp.replace('✔ ', '');
+  }
+  const nb = document.getElementById('next-btn');
+  nb.className = 'next-btn show';
+  nb.textContent = current === questions.length - 1 ? 'اعرف نتيجتك 🎉' : 'السؤال التالي ←';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) showResult();
+  else showQuestion();
+}
+
+function showResult() {
+  document.getElementById('quiz-screen').classList.remove('active');
+  document.getElementById('result-screen').classList.add('active');
+  const pct = Math.round((score / questions.length) * 100);
+  document.getElementById('big-score').textContent = toArabic(score) + ' / ' + toArabic(questions.length);
+  let emoji, title, msg, stars;
+  if (pct >= 89) {
+    emoji = '🏆'; title = 'خبير اقتصادي!';
+    msg = 'ممتاز! أنت تُتقن إدارة المال بصورة رائعة. أحسنت صنعاً!';
+    stars = '⭐⭐⭐';
+  } else if (pct >= 67) {
+    emoji = '😊'; title = 'أداء جيد جداً!';
+    msg = 'أداء متميز! مراجعة بسيطة ستجعل منك خبيراً حقيقياً. واصل الجهد!';
+    stars = '⭐⭐';
+  } else {
+    emoji = '💪'; title = 'استمر في التعلم!';
+    msg = 'لا بأس بذلك! راجع الدروس وأعد المحاولة، فالتعلم يحتاج إلى وقت وصبر.';
+    stars = '⭐';
+  }
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-msg').textContent = msg;
+  document.getElementById('stars').textContent = stars;
+  const fmt = t => toArabic(topicScores[t][0]) + '/' + toArabic(topicScores[t][1]);
+  document.getElementById('ts1').textContent = fmt('saving');
+  document.getElementById('ts2').textContent = fmt('work');
+  document.getElementById('ts3').textContent = fmt('budget');
+}
+
+function restart() {
+  current = 0; score = 0; answered = false;
+  topicScores = { saving:[0,0], work:[0,0], budget:[0,0] };
+  document.getElementById('result-screen').classList.remove('active');
+  document.getElementById('start-screen').classList.add('active');
+}
+</script>
+</body>
+</html>
